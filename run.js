@@ -1,7 +1,8 @@
 import { ssr } from './ssr.js';
 
 async function run() {
-    await ssr(); // You can pass a different file path if needed
+    await ssr('./src/Sub.js', true); // first precompile just the imports
+    await ssr();
 }
 
 run();

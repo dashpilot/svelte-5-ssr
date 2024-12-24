@@ -9,7 +9,7 @@ function ensureDirectoryExists(directoryPath) {
     }
 }
 
-export async function ssr(svelteFilePath = 'src/App.svelte') {
+export async function ssr(svelteFilePath = 'src/App.svelte', precompileOnly = false) {
     // Ensure the 'cache' directory exists
     const cacheDir = path.resolve('cache');
     ensureDirectoryExists(cacheDir);
@@ -29,19 +29,20 @@ export async function ssr(svelteFilePath = 'src/App.svelte') {
     });
 
     // Determine the output file name based on the Svelte file name
-    const outputFileName = path.basename(svelteFilePath, '.svelte') + '.js';
+    const outputFileName = path.basename(svelteFilePath, path.extname(svelteFilePath)) + '.js';
     const outputFilePath = path.join(cacheDir, outputFileName);
     fs.writeFileSync(outputFilePath, js.code);
 
     console.log(`Compiled Svelte component to ${outputFilePath}`);
 
-    // Dynamically import the compiled component
-    const { default: App } = await import(path.resolve(`./cache/${outputFileName}`));
+    if (!precompileOnly) {
+        // Dynamically import the compiled component
+        const { default: App } = await import(path.resolve(`./cache/${outputFileName}`));
 
-    // Use the render function exported by the compiled component
-    const { head, body } = render(App, { props: { name: 'World' } });
+        // Use the render function exported by the compiled component
+        const { head, body } = render(App, { props: { name: 'World' } });
 
-    const output = `
+        const output = `
     <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -57,10 +58,11 @@ export async function ssr(svelteFilePath = 'src/App.svelte') {
     </html>
     `;
 
-    console.log(output);
+        console.log(output);
 
-    const htmlOutputFilePath = path.resolve('public/index.html');
-    fs.writeFileSync(htmlOutputFilePath, output);
+        const htmlOutputFilePath = path.resolve('public/index.html');
+        fs.writeFileSync(htmlOutputFilePath, output);
 
-    console.log(`Compiled HTML to ${htmlOutputFilePath}`);
+        console.log(`Compiled HTML to ${htmlOutputFilePath}`);
+    }
 }
