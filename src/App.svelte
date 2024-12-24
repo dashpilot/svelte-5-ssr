@@ -1,10 +1,7 @@
 <script>
-    let name = 'World';
+    let { name } = $props();
 </script>
 
 <main>
     Hello, <strong>{name}</strong>
 </main>
-
-<style>
-</style>

@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 function ssr() {
-    const { head, body } = render(App, { props: { world: 'someValue' } });
+    const { head, body } = render(App, { props: { name: 'World' } });
 
     const output = `
  <!DOCTYPE html>
