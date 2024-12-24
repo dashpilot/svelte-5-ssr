@@ -1,4 +1,4 @@
 /node_modules
-/precompiled/*
+/cache/*
 /public/*
 .DS_Store
