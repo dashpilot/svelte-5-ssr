@@ -9,8 +9,8 @@ function ensureDirectoryExists(directoryPath) {
     }
 }
 
-async function precompile() {
-    // Ensure the 'precompiled' directory exists
+export async function ssr(svelteFilePath = 'src/App.svelte') {
+    // Ensure the 'cache' directory exists
     const cacheDir = path.resolve('cache');
     ensureDirectoryExists(cacheDir);
 
@@ -19,25 +19,24 @@ async function precompile() {
     ensureDirectoryExists(publicDir);
 
     // Read the Svelte component file
-    const filePath = path.resolve('src/App.svelte');
+    const filePath = path.resolve(svelteFilePath);
     const source = fs.readFileSync(filePath, 'utf-8');
 
     // Compile the Svelte component
     const { js } = compile(source, {
-        filename: 'App.svelte',
+        filename: path.basename(svelteFilePath),
         generate: 'ssr', // Generate server-side rendering code
     });
 
-    // Write the compiled JavaScript to a file
-    const outputFilePath = path.join(cacheDir, 'App.js');
+    // Determine the output file name based on the Svelte file name
+    const outputFileName = path.basename(svelteFilePath, '.svelte') + '.js';
+    const outputFilePath = path.join(cacheDir, outputFileName);
     fs.writeFileSync(outputFilePath, js.code);
 
     console.log(`Compiled Svelte component to ${outputFilePath}`);
-}
 
-async function ssr() {
     // Dynamically import the compiled component
-    const { default: App } = await import(path.resolve('./cache/App.js'));
+    const { default: App } = await import(path.resolve(`./cache/${outputFileName}`));
 
     // Use the render function exported by the compiled component
     const { head, body } = render(App, { props: { name: 'World' } });
@@ -60,15 +59,8 @@ async function ssr() {
 
     console.log(output);
 
-    const outputFilePath = path.resolve('public/index.html');
-    fs.writeFileSync(outputFilePath, output);
+    const htmlOutputFilePath = path.resolve('public/index.html');
+    fs.writeFileSync(htmlOutputFilePath, output);
 
-    console.log(`Compiled HTML to ${outputFilePath}`);
+    console.log(`Compiled HTML to ${htmlOutputFilePath}`);
 }
-
-async function main() {
-    await precompile();
-    await ssr();
-}
-
-main();
