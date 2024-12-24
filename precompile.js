@@ -18,7 +18,7 @@ function precompile() {
     ensureDirectoryExists(publicDir);
 
     // Read the Svelte component file
-    const filePath = path.resolve('src/App.html');
+    const filePath = path.resolve('src/App.svelte');
     const source = fs.readFileSync(filePath, 'utf-8');
 
     // Compile the Svelte component
