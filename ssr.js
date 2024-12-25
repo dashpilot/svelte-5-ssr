@@ -88,8 +88,7 @@ export async function ssr(inputFileName, outputFilename) {
     <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Svelte App</title>
-    <style></style>
+    <title>Svelte Server-side rendering (SSR)</title>
     ${head}
     </head>
     <body>
