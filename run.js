@@ -1,8 +1,8 @@
-import { ssr } from './ssr.js';
+import { precompile, ssr } from './ssr.js';
 
 async function run() {
-    await ssr('./src/Sub.svelte', true); // first precompile just the imports
-    await ssr();
+    await precompile('./src'); // first precompile all files in the directory
+    await ssr('App.js', 'index.html');
 }
 
 run();

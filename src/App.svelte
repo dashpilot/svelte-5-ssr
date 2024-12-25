@@ -1,5 +1,5 @@
 <script>
-    import Sub from './Sub.svelte';
+    import Sub from './lib/Sub.svelte';
     let { name } = $props();
 </script>
 

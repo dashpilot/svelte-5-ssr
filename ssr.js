@@ -15,63 +15,92 @@ function replaceSvelteImportsWithJs(code) {
     });
 }
 
-export async function ssr(svelteFilePath = 'src/App.svelte', precompileOnly = false) {
-    // Ensure the 'cache' directory exists
-    const cacheDir = path.resolve('cache');
-    ensureDirectoryExists(cacheDir);
+function getAllSvelteFiles(dir, fileList = []) {
+    const files = fs.readdirSync(dir);
+    files.forEach((file) => {
+        const filePath = path.join(dir, file);
+        if (fs.statSync(filePath).isDirectory()) {
+            getAllSvelteFiles(filePath, fileList);
+        } else if (file.endsWith('.svelte')) {
+            fileList.push(filePath);
+        }
+    });
+    return fileList;
+}
 
-    // Ensure the 'public' directory exists
+function deleteDirectory(directoryPath) {
+    if (fs.existsSync(directoryPath)) {
+        fs.rmSync(directoryPath, { recursive: true, force: true });
+    }
+}
+
+export async function precompile(directoryPath) {
+    // Delete the 'cache' and 'public' directories if they exist
+    const cacheDir = path.resolve('cache');
     const publicDir = path.resolve('public');
+    deleteDirectory(cacheDir);
+    deleteDirectory(publicDir);
+
+    // Ensure the 'cache' and 'public' directories exist
+    ensureDirectoryExists(cacheDir);
     ensureDirectoryExists(publicDir);
 
-    // Read the Svelte component file
-    const filePath = path.resolve(svelteFilePath);
-    const source = fs.readFileSync(filePath, 'utf-8');
+    // Get all .svelte files in the directory and subdirectories
+    const svelteFiles = getAllSvelteFiles(directoryPath);
 
-    // Compile the Svelte component
-    const { js } = compile(source, {
-        filename: path.basename(svelteFilePath),
-        generate: 'ssr', // Generate server-side rendering code
-    });
+    for (const svelteFilePath of svelteFiles) {
+        // Read the Svelte component file
+        const source = fs.readFileSync(svelteFilePath, 'utf-8');
 
-    // Determine the output file name based on the Svelte file name
-    const outputFileName = path.basename(svelteFilePath, path.extname(svelteFilePath)) + '.js';
-    const outputFilePath = path.join(cacheDir, outputFileName);
+        // Compile the Svelte component
+        const { js } = compile(source, {
+            filename: path.basename(svelteFilePath),
+            generate: 'ssr', // Generate server-side rendering code
+        });
 
-    // replace .
-    const modifiedCode = replaceSvelteImportsWithJs(js.code);
-    fs.writeFileSync(outputFilePath, modifiedCode);
+        // Determine the output file name and path
+        const relativePath = path.relative(directoryPath, svelteFilePath);
+        const outputFileName = path.basename(relativePath, '.svelte') + '.js';
+        const outputFilePath = path.join(cacheDir, path.dirname(relativePath), outputFileName);
 
-    console.log(`Compiled Svelte component to ${outputFilePath}`);
+        // Ensure the output directory exists
+        ensureDirectoryExists(path.dirname(outputFilePath));
 
-    if (!precompileOnly) {
-        // Dynamically import the compiled component
-        const { default: App } = await import(path.resolve(`./cache/${outputFileName}`));
+        // Replace .svelte imports with .js
+        const modifiedCode = replaceSvelteImportsWithJs(js.code);
+        fs.writeFileSync(outputFilePath, modifiedCode);
 
-        // Use the render function exported by the compiled component
-        const { head, body } = render(App, { props: { name: 'World' } });
+        console.log(`Compiled Svelte component to ${outputFilePath}`);
+    }
+}
 
-        const output = `
+export async function ssr(inputFileName, outputFilename) {
+    // Dynamically import the compiled component
+    const { default: App } = await import(path.resolve(`./cache/${inputFileName}`));
+
+    // Use the render function exported by the compiled component
+    const { head, body } = render(App, { props: { name: 'World' } });
+
+    const output = `
     <!DOCTYPE html>
     <html lang="en">
     <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Svelte App</title>
-        <style></style>
-        ${head}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Svelte App</title>
+    <style></style>
+    ${head}
     </head>
     <body>
-        ${body}
+    ${body}
     </body>
     </html>
     `;
 
-        console.log(output);
+    console.log(output);
 
-        const htmlOutputFilePath = path.resolve('public/index.html');
-        fs.writeFileSync(htmlOutputFilePath, output);
+    const htmlOutputFilePath = path.resolve('public/' + outputFilename);
+    fs.writeFileSync(htmlOutputFilePath, output);
 
-        console.log(`Compiled HTML to ${htmlOutputFilePath}`);
-    }
+    console.log(`Compiled HTML to ${htmlOutputFilePath}`);
 }
