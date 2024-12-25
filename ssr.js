@@ -56,6 +56,7 @@ export async function precompile(directoryPath) {
         const { js } = compile(source, {
             filename: path.basename(svelteFilePath),
             generate: 'ssr', // Generate server-side rendering code
+            css: 'injected',
         });
 
         // Determine the output file name and path
