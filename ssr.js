@@ -9,6 +9,12 @@ function ensureDirectoryExists(directoryPath) {
     }
 }
 
+function replaceSvelteImportsWithJs(code) {
+    return code.replace(/import\s+([^\s]+)\s+from\s+['"]([^'"]+)\.svelte['"]/g, (match, p1, p2) => {
+        return `import ${p1} from '${p2}.js'`;
+    });
+}
+
 export async function ssr(svelteFilePath = 'src/App.svelte', precompileOnly = false) {
     // Ensure the 'cache' directory exists
     const cacheDir = path.resolve('cache');
@@ -31,7 +37,10 @@ export async function ssr(svelteFilePath = 'src/App.svelte', precompileOnly = fa
     // Determine the output file name based on the Svelte file name
     const outputFileName = path.basename(svelteFilePath, path.extname(svelteFilePath)) + '.js';
     const outputFilePath = path.join(cacheDir, outputFileName);
-    fs.writeFileSync(outputFilePath, js.code);
+
+    // replace .
+    const modifiedCode = replaceSvelteImportsWithJs(js.code);
+    fs.writeFileSync(outputFilePath, modifiedCode);
 
     console.log(`Compiled Svelte component to ${outputFilePath}`);
 
