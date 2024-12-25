@@ -13,6 +13,7 @@ Simple example of how you can server-side-render a Svelte 5 component.
 -   supports nested components
 -   supports runes
 -   supports style tags inside components, and inlines them into the head
+-   no need for Vite or Rollup: all compilation happens server-side
 
 ## How to run
 
