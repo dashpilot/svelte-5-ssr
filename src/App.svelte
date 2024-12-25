@@ -3,7 +3,13 @@
     let { name } = $props();
 </script>
 
-<main>
+<main class="container">
     Hello, <strong>{name}</strong>
     <Sub />
 </main>
+
+<style>
+    .container {
+        margin-top: 50px;
+    }
+</style>
