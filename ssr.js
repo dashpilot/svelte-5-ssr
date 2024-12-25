@@ -75,32 +75,16 @@ export async function precompile(directoryPath) {
     }
 }
 
-export async function renderToString(inputFileName, title, prependToHead = '') {
+export async function renderToString(inputFileName) {
     // Dynamically import the compiled component
     const { default: App } = await import(path.resolve(`./cache/${inputFileName}`));
 
     // Use the render function exported by the compiled component
-    const { head, body } = render(App, { props: { name: 'World' } });
+    const { body } = render(App, { props: { name: 'World' } });
 
-    const output = `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${title}</title>
-    ${prependToHead}
-    ${head}
-    </head>
-    <body>
-    ${body}
-    </body>
-    </html>
-    `;
+    console.log(body);
 
-    console.log(output);
-
-    return output;
+    return body;
 }
 
 export async function renderToFile(inputFileName, outputFilename, title, prependToHead = '') {
